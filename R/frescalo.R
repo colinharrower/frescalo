@@ -1,0 +1,107 @@
+frescalo_ch = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0.2703, missing_data = 2){
+  # This function calculates the sampling effort multiplier, alpha, that would equate sampling effort across all regions
+  # This is the main method of Frescalo.
+
+  # The script returns a list containing two data frames: frescalo.out, freq.out
+  # frescalo.out contains the recorder-effort multiplier for each focal location, and other related information
+  # freq.out contains the corrected local frequency of each species in each neighborhood of a focal region,
+  # along with other related information
+  # Species identified as a benchmark in freq.out (benchmark=1) can be used to assess trends
+
+  # Argument missing_data defines what to do if data in the neighbourhood are missing.
+  # missing_data = 1 do not proceed with the calculation
+  # missing_data = 2 (default) set missing species data to all absences and proceed
+
+  # R_star defines the corrected frequency threshold for benchmark species
+  # (default = 0.27, means that after correction for recorder effort the top 27% of species are used as benchmarks)
+
+  # Determine all unique focal locations in neigh_wts
+  foc_locs = unique(neigh_wts$location1)
+  n_foc = length(foc_locs)
+  # Calculate no. of spp for each focal location
+  nSpecies = sapply(spp_pa[match(foc_locs,all_loc,nomatch=length(all_loc)+1)], FUN=sum, simplify=T) # CH length(all_loc)+1 for nomatch so now if foc_loc not in all_loc then nSpecies = 0 should be returned (though due to filtering of weights dataset I don't think this should ever actually happen)
+  # Create data.frame to hold output location summary statistics for focal locs
+  out_loc = data.frame(
+    location=foc_locs,
+    nSpecies=nSpecies,
+    phi_in=NA, alpha=NA, phi_out=Phi, spnum_in=NA, spnum_out=NA, iter=NA
+  )
+
+  # Setup temporary object to hold location species frequency statistics (use temp list and collapse afterwards to avoid growing object)
+  temp_freq = vector("list",n_foc)
+  #freq.out = data.frame(location=c(), species=c(), pres=c(), freq=c(), rank=c(), rank_1=c(), benchmark=c())
+
+  for(i_f in 1:n_foc){
+    focal = foc_locs[i_f]
+    focal_d = neigh_wts[which(neigh_wts$location1==focal),]
+
+    # Identify species in neighbourhood of focal region
+    # If data missing for any neighbourhood locations for current focal location assign (e.g. nomatch) give it a index 1 greater than length of (spp_pa) so it will have a NULL value in speciesRegional
+    neighbourhood = match(focal_d$location2, all_loc, nomatch=length(spp_pa)+1) # empty neighbourhood sites are NULL
+    speciesRegional = spp_pa[neighbourhood]
+    speciesRegional <- lapply(speciesRegional, function(x) if(is.null(x)) rep(0, times = length(all_spp)) else x) # Find any locations in the neighbourhood that are not in spp_pa (should be NULL in speciesRegional) and create a spp_pa like vector for them with zeros for every species
+
+    missingData <- neighbourhood==length(spp_pa)+1 # length(spp_pa) is number of locations; missing data is neighbourhoods with
+    if (any(missingData) & missing_data==1) {
+      # Species data missing from a location in the neighbourhood. Ignore this focal location
+      warning(paste('Removing location ',focal,'. Missing data for locations in the neighbourhood.', sep=''))
+
+      out_loc$alpha[i_f] = NA
+      out_loc$iter[i_f] = NA
+      out_loc$phi_in[i_f]= NA
+    } else {
+      # Calculate weights of locations in the neighbourhood
+      weights = focal_d$w/(sum(focal_d$w)+1.0E-10)
+
+      # Create weighted neighbourhood frequencies (checked against Frescalo)
+      frequency = Reduce('+',Map('*',as.list(weights), speciesRegional))
+      # Added by Oli Pescott, Apr 2024, to avoid zeros and match Hill (2012) outputs
+      frequency <- ifelse(frequency==0, frequency+1.0E-10, frequency)
+      phi_in = sum(frequency^2) / sum(frequency)
+
+      # Calculate the multiplier (alpha) that equalises recording effort
+      alpha_min = 1  # Minimum alpha ( =1 means no correction required)
+      alpha_max = 5
+      # Increase alpha_max until min.fun() becomes positive (i.e. ensure there is a zero)
+      while (min.fun(alpha_max, frequency, Phi)<0) { alpha_max = alpha_max + 5}
+      while (min.fun(alpha_min, frequency, Phi)>0) { alpha_min = alpha_min/2}
+
+      # Find sampling-effort multiplier
+      sol=uniroot(min.fun,interval=c(alpha_min,alpha_max), tol=0.0003, frequency, Phi)
+      out_loc$alpha[i_f] = sol$root
+      out_loc$phi_in[i_f] = phi_in
+      out_loc$iter[i_f] = sol$iter
+      # Expected species richness before recorder effort correct
+      out_loc$spnum_in[i_f] = sum(frequency)
+      # Expected species richness after recorder effort correct
+      out_loc$spnum_out[i_f] = sum(1-exp(sol$root*log(1-frequency)))
+
+      # Create the data frame with the local species frequencies after correction
+      freq.order = order(frequency, decreasing=T) # no explicit method to deal with ties, so any ties just arranged using original name order
+      focal.ind = match(focal,all_loc,nomatch=length(all_loc))
+
+      # Pick out benchmark species (assumes that species are ordered by rank)
+      benchmarkSpecies = rep(0, times=length(frequency))
+      R_prime = c(1:length(spp_pa[[focal.ind]]))/out_loc$spnum_out[i_f] # rescaled rank
+      # Benchmark species are either those where rescaled rank < R_star, or are ranked number 1 even tho all R_prime > R_star
+      benchmarkSpecies[R_prime<R_star | c(1:length(spp_pa[[focal.ind]]))==1 ] = 1
+      #benchmarkSpecies[R_prime<R_star] = 1 ## Yearsley original only had one condition. Adding second increases correlation with Hill fortran marginally
+
+      # freq_1 is the corrected neighbourhood frequencies
+      temp_freq[[i_f]] = data.frame(
+        location=focal,
+        species=all_spp[freq.order],
+        pres=spp_pa[[focal.ind]][freq.order],
+        freq=frequency[freq.order],
+        freq_1=1-exp(sol$root*log(1-frequency[freq.order])),
+        rank=c(1:length(spp_pa[[focal.ind]])),
+        rank_1=R_prime,
+        benchmark=benchmarkSpecies
+      )
+    }
+  }
+  # Collapse temp_freq to single data.frame
+    out_freq = do.call("rbind",temp_freq)
+  # Return outputs as list
+  return(list(frescalo=out_loc, freq=out_freq))
+}
