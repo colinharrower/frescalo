@@ -1,4 +1,4 @@
-frescalo_ch = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0.2703, missing_data = 2){
+fresc_scaling = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0.2703, missing_data = 2){
   # This function calculates the sampling effort multiplier, alpha, that would equate sampling effort across all regions
   # This is the main method of Frescalo.
 
@@ -77,24 +77,24 @@ frescalo_ch = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0.2
       out_loc$spnum_out[i_f] = sum(1-exp(sol$root*log(1-frequency)))
 
       # Create the data frame with the local species frequencies after correction
-      freq.order = order(frequency, decreasing=T) # no explicit method to deal with ties, so any ties just arranged using original name order
-      focal.ind = match(focal,all_loc,nomatch=length(all_loc))
+      freq_ord = order(frequency, decreasing=T) # no explicit method to deal with ties, so any ties just arranged using original name order
+      foc_ind = match(focal,all_loc,nomatch=length(all_loc))
 
       # Pick out benchmark species (assumes that species are ordered by rank)
       benchmarkSpecies = rep(0, times=length(frequency))
-      R_prime = c(1:length(spp_pa[[focal.ind]]))/out_loc$spnum_out[i_f] # rescaled rank
+      R_prime = c(1:length(spp_pa[[foc_ind]]))/out_loc$spnum_out[i_f] # rescaled rank
       # Benchmark species are either those where rescaled rank < R_star, or are ranked number 1 even tho all R_prime > R_star
-      benchmarkSpecies[R_prime<R_star | c(1:length(spp_pa[[focal.ind]]))==1 ] = 1
+      benchmarkSpecies[R_prime<R_star | c(1:length(spp_pa[[foc_ind]]))==1 ] = 1
       #benchmarkSpecies[R_prime<R_star] = 1 ## Yearsley original only had one condition. Adding second increases correlation with Hill fortran marginally
 
       # freq_1 is the corrected neighbourhood frequencies
       temp_freq[[i_f]] = data.frame(
         location=focal,
-        species=all_spp[freq.order],
-        pres=spp_pa[[focal.ind]][freq.order],
-        freq=frequency[freq.order],
-        freq_1=1-exp(sol$root*log(1-frequency[freq.order])),
-        rank=c(1:length(spp_pa[[focal.ind]])),
+        species=all_spp[freq_ord],
+        pres=spp_pa[[foc_ind]][freq_ord],
+        freq=frequency[freq_ord],
+        freq_1=1-exp(sol$root*log(1-frequency[freq_ord])),
+        rank=c(1:length(spp_pa[[foc_ind]])),
         rank_1=R_prime,
         benchmark=benchmarkSpecies
       )
