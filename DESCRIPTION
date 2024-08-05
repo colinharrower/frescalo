@@ -1,22 +1,26 @@
 Package: frescalo
-Title: Use Frescalo model to attempt to correct for variation in recording effort in bioloigical recording data
+Title: Correcting for variation in recording effort in bioloigical recording data using frescalo methodology
 Version: 0.0.0.9000
 Authors@R: 
     c(
     person("Colin", "Harrower", , "corr@ceh.ac.uk", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0001-5070-5293"))
+           comment = c(ORCID = "0000-0001-5070-5293")),
+    person("Jonathan", "Yearsley", , "jon.yearsley@ucd.ie", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0003-1838-0454")),
     person("Oliver", "Pescott", , "olipes@ceh.ac.uk", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-0685-8046"))
+           comment = c(ORCID = "0000-0002-0685-8046")),
     )
 Description: An R implementation of Frescalo (FREquency SCAling LOcal) modeling 
   methodology invented by Dr Mark O. Hill to aid in analyss of biological record data.
   The methodology attempts to correct for variation in recorder effort in biological 
-  recording data (i.e. species occurrence data) over space and time. The R package is based
-  on the 
+  recording data (i.e. species occurrence data) over space and time. 
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Imports:
-  doParallel
+  doParallel,
   foreach
+Depends: 
+    R (>= 2.10)
+LazyData: true
