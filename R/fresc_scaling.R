@@ -150,9 +150,58 @@ fresc_scaling = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0
       # Calculate the multiplier (alpha) that equalises recording effort
       alpha_min = 1  # Minimum alpha ( =1 means no correction required)
       alpha_max = 5
+
+      cur_alpha_rng = seq(alpha_max,by = 5,length.out = 10)
+      cur_min_f = -1
       # Increase alpha_max until freq_min_f() becomes positive (i.e. ensure there is a zero)
-      while (freq_min_f(alpha_max, frequency, Phi)<0) { alpha_max = alpha_max + 5}
-      while (freq_min_f(alpha_min, frequency, Phi)>0) { alpha_min = alpha_min/2}
+      while (all(cur_min_f < 0)) {
+        cur_min_f = sapply(cur_alpha_rng, freq_min_f, fij = frequency, Phi = Phi)
+        if(any(cur_min_f > 0)){
+          alpha_max = cur_alpha_rng[which.max(cur_min_f > 0)]
+        } else {
+          if(length(unique(cur_min_f)) == 1){
+            break
+          }
+          cur_alpha_rng = seq(max(cur_alpha_rng)+5,by = 5,length.out = 10)
+        }
+      }
+      # Look for cur_min_f all being the same value
+      if(length(unique(cur_min_f)) == 1){
+        warning(paste('Removing location ',focal,'. Changing alpha_max had no effect.', sep=''))
+
+        # Set values to NA
+        out_loc$alpha[i_f] = NA
+        out_loc$iter[i_f] = NA
+        out_loc$phi_in[i_f]= NA
+
+        # Skip
+        next
+      }
+
+      cur_alpha_rng = rep(alpha_min,10)*0.5^(0:9)
+      cur_min_f = 1
+      while (all(cur_min_f > 0)) {
+        cur_min_f = sapply(cur_alpha_rng, freq_min_f, fij = frequency, Phi = Phi)
+        if(any(cur_min_f < 0)){
+          alpha_min = cur_alpha_rng[which.max(cur_min_f < 0)]
+        }
+        if(length(unique(cur_min_f)) == 1){
+          break
+        }
+        cur_alpha_rng = rep(min(cur_alpha_rng)/2,10)*0.5^(0:9)
+      }
+      if(length(unique(cur_min_f)) == 1){
+
+        warning(paste('Removing location ',focal,'. Changing alpha_min had no effect.', sep=''))
+        # Set values to NA
+        out_loc$alpha[i_f] = NA
+        out_loc$iter[i_f] = NA
+        out_loc$phi_in[i_f]= NA
+
+        # Skip
+        next
+      }
+      #while (freq_min_f(alpha_min, frequency, Phi)>0) { alpha_min = alpha_min/2}
 
       # Find sampling-effort multiplier
       sol=uniroot(freq_min_f,interval=c(alpha_min,alpha_max), tol=0.0003, frequency, Phi)
