@@ -25,6 +25,6 @@ cfun = function(...) {
 cfunTrend = function(...) {
   # Another bespoke function to combine the output from the trend() function
   input_list <- list(...)
-  return(list(trend.out=Reduce('rbind',Map(function(x){x[[1]]},input_list)),
-              site.time.out=Reduce('rbind',Map(function(x){x[[2]]},input_list))))
+  return(list(trend=Reduce('rbind',Map(function(x){x[[1]]},input_list)),
+              site_time=Reduce('rbind',Map(function(x){x[[2]]},input_list))))
 }

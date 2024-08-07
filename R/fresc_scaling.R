@@ -122,7 +122,8 @@ fresc_scaling = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0
     # If data missing for any neighbourhood locations for current focal location assign (e.g. nomatch) give it a index 1 greater than length of (spp_pa) so it will have a NULL value in speciesRegional
     neighbourhood = match(focal_d$location2, all_loc, nomatch=length(spp_pa)+1) # empty neighbourhood sites are NULL
     speciesRegional = spp_pa[neighbourhood]
-    speciesRegional = lapply(speciesRegional, function(x) if(is.null(x)) rep(0, times = length(all_spp)) else x) # Find any locations in the neighbourhood that are not in spp_pa (should be NULL in speciesRegional) and create a spp_pa like vector for them with zeros for every species
+    # Find any locations in the neighbourhood that are not in spp_pa (should be NULL in speciesRegional) and create a spp_pa like vector for them with zeros for every species
+    speciesRegional = lapply(speciesRegional, function(x) if(is.null(x)) rep(0, times = length(all_spp)) else x)
 
     missingData = neighbourhood==length(spp_pa)+1 # length(spp_pa) is number of locations; missing data is neighbourhoods with
     if (all(missingData) | (any(missingData) & missing_data==1)){
@@ -148,6 +149,9 @@ fresc_scaling = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0
       phi_in = sum(frequency^2) / sum(frequency)
 
       # Calculate the multiplier (alpha) that equalises recording effort
+      # Modified from Jon/Oli's original code to try and deal with situations with sparse data
+      # and unfiltered neight_wts object were resulting in infinite while loops. There is probably
+      # a better way to deal with this but for now seems to work (batches of 10 and break if no improvement)
       alpha_min = 1  # Minimum alpha ( =1 means no correction required)
       alpha_max = 5
 
@@ -243,6 +247,24 @@ fresc_scaling = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0
   return(list(locs=out_loc, freq=out_freq))
 }
 
+#' Determine the difference between the rescaled neighbourhod frequency and the target Phi
+#' for a given value of alpha
+#'
+#' @param alpha the value of alpha
+#' @param fij the frequencies of each species in a given neighbourhood
+#' @param Phi The target Phi value
+#'
+#' @return The difference between the target Phi and the current rescaled Neighbourhood
+#'   frequency. The alpha value at which this equals zero indicates the
+#'   scaling factor required for that neighbourhood to reach the target Phi.
+#'
+#' @description
+#' This function is the function that frescalo aims to minimise for each neighbourhood in
+#'   order to determine the scaling factor (alpha) required to reach Phi.
+#'
+#'
+#'
+#' @examples
 freq_min_f <- function(alpha,fij,Phi){
   # The function to minimise to fit Frescalo model to the data
   # Page 5 column 2 in Hill (2011)
