@@ -5,10 +5,10 @@ Authors@R:
     c(
     person("Colin", "Harrower", , "corr@ceh.ac.uk", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-5070-5293")),
-    person("Jonathan", "Yearsley", , "jon.yearsley@ucd.ie", role = c("aut", "cre"),
+    person("Jonathan", "Yearsley", , "jon.yearsley@ucd.ie", role = c("aut"),
            comment = c(ORCID = "0000-0003-1838-0454")),
-    person("Oliver", "Pescott", , "olipes@ceh.ac.uk", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-0685-8046")),
+    person("Oliver", "Pescott", , "olipes@ceh.ac.uk", role = c("aut"),
+           comment = c(ORCID = "0000-0002-0685-8046"))
     )
 Description: An R implementation of Frescalo (FREquency SCAling LOcal) modeling 
   methodology invented by Dr Mark O. Hill to aid in analyss of biological record data.
