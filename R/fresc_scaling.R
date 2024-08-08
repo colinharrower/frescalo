@@ -1,11 +1,16 @@
 #' Determine Frequency Scaling Factor Based on Local Occupancy
 #'
-#' @param neigh_wts Neighbourhood Weights data
-#' @param spp_pa list specifying presence or absence of species at each location.
-#'   The list should correspond to `all_loc` where the ith element of `spp_pa` list
-#'   is the presence/absence data for ith location in `all_loc`.
-#'   Each element of `spp_pa` should contain a vector of 0 or 1 values of length =
-#'   `length(all_spp)` where 0 represents absence and 1 presence of that given
+#' @param neigh_wts neighbourhoods weighs data. A data.frame with the following
+#'   named columns `location1`, `location2`, `w` containing 1) location
+#'   identifier for the focal location of the neighbourhood, 2) location
+#'   identifiers for locations in the neighbourhood for the current focal
+#'   location, 3) weighting values specifying the similarity between the focal
+#'   location and the specific location within it's neighbourhood.
+#' @param spp_pa list specifying presence or absence of species at each
+#'   location. The list should correspond to `all_loc` where the ith element of
+#'   `spp_pa` list is the presence/absence data for ith location in `all_loc`.
+#'   Each element of `spp_pa` should contain a vector of 0 or 1 values of length
+#'   = `length(all_spp)` where 0 represents absence and 1 presence of that given
 #'   species in the given location. The order of the presence and absence data
 #'   should match the order of species in `all_spp`
 #' @param all_loc Vector containing all unique locations in the occupancy data.
@@ -17,11 +22,11 @@
 #' @param R_star The benchmarking species rank proportion. The default `R_star =
 #'   0.2703` means that after correction for recording effort the top 27% of
 #'   species are used as benchmarks.
-#' @param filter_wts Logical value determining whether neigh_wts should be filtered
-#'   to only use neighbourhood info for locations in the occupancy data. The
-#'   default `filter_wts = FALSE` will attempt to determine statistics for every
-#'   focal location in `neigh_wts` while `TRUE` will exclude any focal locations
-#'   in `neigh_wts` that are not appear in the occupancy data.
+#' @param filter_wts Logical value determining whether neigh_wts should be
+#'   filtered to only use neighbourhood info for locations in the occupancy
+#'   data. The default `filter_wts = FALSE` will attempt to determine statistics
+#'   for every focal location in `neigh_wts` while `TRUE` will exclude any focal
+#'   locations in `neigh_wts` that are not appear in the occupancy data.
 #' @param missing_data action to take when locations in neighbourhoods are
 #'   missing from the occupancy dataset. The default `missing_data = 2` assumes
 #'   that all species are absent or not recorded from the missing locations,
@@ -30,13 +35,12 @@
 #'
 #' @return A list comprised of two elements each containing a data.frame. The
 #'   first element `locs` contains location metrics while the the second `freq`
-#'   contains the original and re-scaled species frequencies. These two
-#'   outputs are equivalent to `samples.txt` and `frequencies.out` output files
-#'   produced by Mark Hill's original frescalo fortran program.
+#'   contains the original and re-scaled species frequencies. These two outputs
+#'   are equivalent to `samples.txt` and `frequencies.out` output files produced
+#'   by Mark Hill's original frescalo fortran program.
 #'
 #'   The data.frame in `locs` has a row for each location in `spp_pa` with the
-#'   following columns:
-#'   \item{location}{the location name(s) or identifier(s)}
+#'   following columns: \item{location}{the location name(s) or identifier(s)}
 #'   \item{nSpecies}{the total number of species or taxa observed}
 #'   \item{phi_in}{the `phi_i`, i.e. local frequency-weighted mean frequency,
 #'   for the local neighbourhood for the given location}
@@ -50,17 +54,16 @@
 #'   factor `alpha` required}
 #'
 #'   The data.frame in `freq` has rows for each location taxa combination with
-#'   the following columns:
-#'   \item{location}{the location name(s) or identifier(s)}
-#'   \item{species}{the species/taxa name(s) or identifier(s)}
+#'   the following columns: \item{location}{the location name(s) or
+#'   identifier(s)} \item{species}{the species/taxa name(s) or identifier(s)}
 #'   \item{pres}{logical determining prescence (`1`) or absence (`0`) of the
 #'   species/taxa at that location}
 #'   \item{freq}{the localisied frequency for that species & neighbourhood
 #'   before rescaling}
 #'   \item{freq_1}{the local frequency for that species &
 #'   neighbourhood after rescaling}
-#'   \item{rank}{the original frequency rank}
-#'   \item{rank_1}{the frequency rank after rescaling}
+#'   \item{rank}{the original frequency rank} \item{rank_1}{the frequency rank
+#'   after rescaling}
 #'   \item{benchmark}{indicates whether the species was a benchmark
 #'   species for the local neighbourhood (`1` = benchmark species/taxa)}
 #'
@@ -77,6 +80,31 @@
 #'
 #' @examples
 #'
+#' ## Extract results for a couple of focal locations from included
+#' ## unicorns example dataset
+#'
+#' # Get subset of 250 locations from this dataset
+#'   test_locs = unique(s$location)[1:250]
+#'   test_spp = unique(s$species)
+#'
+#' # Extract data from weights and occ data
+#'   test_wts = d[which(d$location1 %in% test_locs),]
+#'   test_occ = s[which(s$location %in% test_locs),]
+#' # Convert to list of prescence/absence
+#'   pa_lt = frescalo:::speciesListFun(test_occ, species = test_spp)
+#'
+#' ## Now determine rescaling parameter and adjust frequencies using
+#' ## using fresc_scaling()
+#'
+#'  out_freq = fresc_scaling(
+#'   test_wts,pa_lt,
+#'   all_loc = test_locs,
+#'   all_spp = test_spp
+#'  )
+#'
+#' ## View outputs
+#'   head(out_freq[["locs"]])
+#'   head(out_freq[["freq"]])
 #'
 #'
 #'
@@ -265,6 +293,14 @@ fresc_scaling = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0
 #'
 #'
 #' @examples
+#'
+#' ## Create a set of frequency values
+#'   test_freq = runif(1000,0,1)
+#'
+#' ## Run freq_min_f on these test_frequencies
+#'   freq_min_f(5,test_freq,0.74)
+#'
+#'
 freq_min_f <- function(alpha,fij,Phi){
   # The function to minimise to fit Frescalo model to the data
   # Page 5 column 2 in Hill (2011)
