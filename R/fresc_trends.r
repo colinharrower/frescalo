@@ -1,3 +1,69 @@
+#' Estimate frescalo tFactors for occupancy data based on corrected
+#' neighbourhood frequencies
+#'
+#' @param s_data occupancy dataset. Supplied as a data.frame with the following
+#'   named columns; `time`, `location`, `species`. The dataset should contain a
+#'   row corresponding to the recording or presence of the specified species at
+#'   the specified location during the specified time period.
+#' @param freq corrected neighbourhood frequencies returned by `fresc_scaling`.
+#'   A data.frame containing the following columns; `location` `species`,
+#'   `freq_1`,`rank_` and `benchmark`.
+#' @param all_spp character vector containing all species identifiers. The
+#'   default `all_spp = unique(s_data)` will determine this from `s_data`. If
+#'   running in batches, i.e. in parallel, the list from the full dataset can
+#'   instead be supplied overiding this behaviour
+#'
+#' @return a list with two elements each containing a data.frame. The
+#'   first element `trend` cotains a data.frame with the tFactors for each
+#'   species. This table is equiavlent to the `trend.out` file produced by the
+#'   original fortan frescalo program. The second element `site_time` contains
+#'   site x time period recording effort information used to make site/time
+#'   period effort adjustments.
+#'
+#' @export
+#'
+#' @description Fits the second part of frescalo analyses which utilises the
+#'   corrected neighbourhood frequencies to determine differences in frequency
+#'   between the time periods.
+#'
+#'
+#' @examples
+#'
+#' ### First part of this example is taken from the example for fresc_scaling()
+#'
+#' ## Extract results for a couple of focal locations from included
+#' ## unicorns example dataset
+#'
+#' # Get subset of 250 locations from this dataset
+#'   test_locs = unique(s$location)[1:250]
+#'   test_spp = unique(s$species)
+#'
+#' # Extract data from weights and occ data
+#'   test_wts = d[which(d$location1 %in% test_locs),]
+#'   test_occ = s[which(s$location %in% test_locs),]
+#' # Convert to list of prescence/absence
+#'   pa_lt = frescalo:::speciesListFun(test_occ, species = test_spp)
+#'
+#' ## Now determine rescaling parameter and adjust frequencies using
+#' ## using fresc_scaling()
+#'
+#'  out_freq = fresc_scaling(
+#'   test_wts,pa_lt,
+#'   all_loc = test_locs,
+#'   all_spp = test_spp
+#'  )
+#'
+#'  ## Now determine tFactor for first time period
+#'  out_trend = fresc_trend(
+#'   test_occ[which(test_occ$time == 1),],
+#'   out_freq$freq,
+#'   test_spp
+#'  )
+#'
+#'  ## View results
+#'  head(out_trend[["trend"]])
+#'  head(out_trend[["site_time"]])
+#'
 fresc_trend = function(s_data, freq, all_spp = unique(s_data)) {
   # Frescalo trend analysis
   # Function to calculate the time scaling factor for each species in a single year bin

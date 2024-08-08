@@ -1,3 +1,63 @@
+#' Apply frescalo model to occupancy data
+#'
+#' @inheritParams fresc_scaling
+#' @param occ_data occupancy dataset. Supplied as a data.frame with the
+#'   following named columns; `time`, `location`, `species`. The dataset should
+#'   contain a row corresponding to the recording or presence of the specified
+#'   species at the specified location during the specified time period.
+#' @param in_parallel Logical determining whether the function is to be run in
+#'   parallel. Default `in_parallel = TRUE` will run the frescalo model
+#'   functions in parallel where possible.
+#' @param n_cores The number of cores/worker processes to spawn when running in
+#'   parallel
+#' @param chunkSize The size of chunks/batches passed to the workers when
+#'   running in parallel.
+#' @param filter_wts Logical determining whether the neighbourhoods weights
+#'   dataset should be filtered to only keep focal locations that are in the
+#'   occupancy dataset or if all locations in `neigh_wts` should be retained.
+#'
+#' @return A `list` with four elements each of containing a `data.frame`. This
+#'   list effectively collates the outputs from `fresc_scaling()` and
+#'   `fresc_trend()` functions. The four elements are; `loc`, `freq`,`trend` and
+#'   `site_time`. for more details see the documentation for `fresc_scaling()`
+#'   and `fresc_trends()`
+#'
+#' @export
+#'
+#' @description This function is a wrapper function that processes the data and
+#'   calls other functions from the package to fit the two stages of the
+#'   frescalo model to the occupancy data supplied. The two stages of the model
+#'   are fitted using the functions `fresc_scaling()` and `fresc_trend()` from
+#'   the package. The first `fresc_scaling()` determines the rescaling parameter
+#'   `alpha` required to adjust the neighbourhood frequency for each
+#'   neighbourhood to match the target frequency `Phi`. This alpha value
+#'   effectively quantifies the recording effort for that location and is used
+#'   to produce adjusted frequencies.
+#'
+#'   The second `fresc_trend()` uses the outputs from `fresc_scaling()` to
+#'   estimate time factors for each species to provide an estimate of how the
+#'   adjusted frequencies have changed between time periods.
+#'
+#' @examples
+#'
+#' ## Use test dataset (s) and weights data (d) included with the package
+#' out_fres = frescalo(s,d,in_parallel = FALSE,filter_wts = TRUE)
+#'
+#' ## View outputs
+#' # Location
+#' head(out_fres[["loc"]])
+#'
+#' # Frequency
+#' head(out_fres[["freq"]])
+#'
+#' # Trend
+#' head(out_fres[["trend"]])
+#'
+#' # Site Time
+#' head(out_fres[["site_time"]])
+#'
+#'
+#'
 frescalo = function(
     occ_data,
     neigh_wts,
@@ -40,7 +100,7 @@ frescalo = function(
     sSplit = split(s, loc_grp[match(occ_data$location, occ_locs)])  # Split species data up into hectads
     if(in_parallel){
       speciesList <- foreach(i = 1:length(sSplit), .inorder=T, .combine='c', .export = "speciesListFun") %dopar% {
-        devtools::load_all()
+        #devtools::load_all() # lines need for local testing remove for installed package
         speciesListFun(spList = sSplit[[i]], species = occ_spp) # which species are in each location?
       }
     } else {
@@ -64,7 +124,7 @@ frescalo = function(
   # Run fres_scaling algorithm across chunks of neighbourhood data
     if(in_parallel){
       out_freq <- foreach(i=1:length(dSplit), .inorder=T, .combine='cfun', .multicombine=TRUE) %dopar% {
-        devtools::load_all()
+        #devtools::load_all() # lines need for local testing remove for installed package
         fresc_scaling(neigh_wts = dSplit[[i]], spp_pa = speciesList, all_loc = occ_locs, all_spp = occ_spp, Phi = Phi, R_star=R_star, missing_data = missing_data)
       }
     } else {
@@ -80,7 +140,7 @@ frescalo = function(
     sSplit2 = split(occ_data, as.factor(occ_data$time))  # Split species data up into year bins
     if(in_parallel){
       trend_out <- foreach(i=1:length(sSplit2), .inorder=T, .combine='cfunTrend', .multicombine=TRUE) %dopar% {
-        devtools::load_all()
+        #devtools::load_all() # lines need for local testing remove for installed package
         fresc_trend(s_data = sSplit2[[i]], out_freq$freq, all_spp = occ_spp)
       }
     } else {
