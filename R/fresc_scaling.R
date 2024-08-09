@@ -77,6 +77,9 @@
 #'   attempt to correct for variation in recording effort in a biological
 #'   records dataset.
 #'
+#' @seealso [frescalo()] for a convenience wrapper function that applies both
+#' stages of the frescalo analyses or [fresc_trends()] for the function to determine
+#' time factors for a given time period using the outputs of `fresc_scaling()`.
 #'
 #' @examples
 #'
@@ -287,8 +290,8 @@ fresc_scaling = function(neigh_wts, spp_pa, all_loc, all_spp, Phi=0.74, R_star=0
 #'   scaling factor required for that neighbourhood to reach the target Phi.
 #'
 #' @description
-#' This function is the function that frescalo aims to minimise for each neighbourhood in
-#'   order to determine the scaling factor (alpha) required to reach Phi.
+#' This function is iteratively called within `fresc_scaling` when attempting to determine the appropriate alpha values for each neighbourhood.
+#' The goal is to find the alpha value that minimises the value returned by this function (i.e. where it reaches zero).
 #'
 #'
 #'

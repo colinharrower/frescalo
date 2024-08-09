@@ -38,6 +38,9 @@
 #'   estimate time factors for each species to provide an estimate of how the
 #'   adjusted frequencies have changed between time periods.
 #'
+#' @seealso [fresc_scaling()] for the rescaling part of the frescalo model or
+#'   [fresc_trend()] for the estimation of the time factors
+#'
 #' @examples
 #'
 #' ## Use test dataset (s) and weights data (d) included with the package
@@ -69,15 +72,11 @@ frescalo = function(
     chunkSize = 250,
     filter_wts = FALSE
 ){
-  # Set object to determine if function created a cluster
-    cl_create = FALSE
 
   # If in_parallel TRUE then check if parallel backend already registered with %dopar%
   if(in_parallel & !foreach::getDoParRegistered()){
     # If not then create a cluster
       cl = parallel::makeCluster(n_cores)
-    # Change value of cl_create to determine cluster has been created by this function
-      cl_create = TRUE
     # Register with dopar
       doParallel::registerDoParallel(cl)
     # Show message to indicate a cluster has been created and registered
@@ -97,7 +96,7 @@ frescalo = function(
 
   # For each region record presence/absence of each species
     loc_grp = as.factor(rep(c(1:ceiling(length(occ_locs)/chunkSize)),each=chunkSize))
-    sSplit = split(s, loc_grp[match(occ_data$location, occ_locs)])  # Split species data up into hectads
+    sSplit = split(occ_data, loc_grp[match(occ_data$location, occ_locs)])  # Split species data up into hectads
     if(in_parallel){
       speciesList <- foreach(i = 1:length(sSplit), .inorder=T, .combine='c', .export = "speciesListFun") %dopar% {
         #devtools::load_all() # lines need for local testing remove for installed package
