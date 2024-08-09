@@ -11,9 +11,9 @@ Authors@R:
            comment = c(ORCID = "0000-0002-0685-8046"))
     )
 Description: An R implementation of Frescalo (FREquency SCAling LOcal) modeling 
-  methodology invented by Dr Mark O. Hill to aid in analyss of biological record data.
-  The methodology attempts to correct for variation in recorder effort in biological 
-  recording data (i.e. species occurrence data) over space and time. 
+  methodology invented by Dr Mark O. Hill to aid with analysis of biological record data.
+  The methodology attempts to correct for variation in recorder effort that is common in biological 
+  recording data (i.e. species occurrence data). The variation in 
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -22,5 +22,5 @@ Imports:
   doParallel,
   foreach
 Depends: 
-    R (>= 2.10)
+    R (>= 3.5)
 LazyData: true
