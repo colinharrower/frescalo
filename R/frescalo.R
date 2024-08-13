@@ -122,12 +122,12 @@ frescalo = function(
 
   # Run fres_scaling algorithm across chunks of neighbourhood data
     if(in_parallel){
-      out_freq <- foreach(i=1:length(dSplit), .inorder=T, .combine='cfun', .multicombine=TRUE) %dopar% {
+      freq_out = foreach(i=1:length(dSplit), .inorder=T, .combine='cfun', .multicombine=TRUE) %dopar% {
         #devtools::load_all() # lines need for local testing remove for installed package
         fresc_scaling(neigh_wts = dSplit[[i]], spp_pa = speciesList, all_loc = occ_locs, all_spp = occ_spp, Phi = Phi, R_star=R_star, missing_data = missing_data)
       }
     } else {
-      out_freq <- foreach(i=1:length(dSplit), .inorder=T, .combine='cfun', .multicombine=TRUE) %do% {
+      freq_out = foreach(i=1:length(dSplit), .inorder=T, .combine='cfun', .multicombine=TRUE) %do% {
         fresc_scaling(neigh_wts = dSplit[[i]], spp_pa = speciesList, all_loc = occ_locs, all_spp = occ_spp, Phi = Phi, R_star=R_star, missing_data = missing_data)
       }
     }
@@ -138,13 +138,13 @@ frescalo = function(
   # Do the Frescalo trend analysis if there are more than 1 year bins (use same location groups as sSplit)
     sSplit2 = split(occ_data, as.factor(occ_data$time))  # Split species data up into year bins
     if(in_parallel){
-      trend_out <- foreach(i=1:length(sSplit2), .inorder=T, .combine='cfunTrend', .multicombine=TRUE) %dopar% {
+      trend_out = foreach(i=1:length(sSplit2), .inorder=T, .combine='cfunTrend', .multicombine=TRUE) %dopar% {
         #devtools::load_all() # lines need for local testing remove for installed package
-        fresc_trend(s_data = sSplit2[[i]], out_freq$freq, all_spp = occ_spp)
+        fresc_trend(s_data = sSplit2[[i]], freq_out$freq, all_spp = occ_spp)
       }
     } else {
-      trend_out <- foreach(i=1:length(sSplit2), .inorder=T, .combine='cfunTrend', .multicombine=TRUE) %do% {
-        fresc_trend(s_data = sSplit2[[i]], out_freq$freq, all_spp = occ_spp)
+      trend_out = foreach(i=1:length(sSplit2), .inorder=T, .combine='cfunTrend', .multicombine=TRUE) %do% {
+        fresc_trend(s_data = sSplit2[[i]], freq_out$freq, all_spp = occ_spp)
       }
     }
 
@@ -152,7 +152,7 @@ frescalo = function(
     rm(sSplit2)
 
   # Create output object
-    out_obj = c(out_freq,trend_out)
+    out_obj = c(freq_out,trend_out)
   # Return output
     return(out_obj)
 }
