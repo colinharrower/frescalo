@@ -3,6 +3,7 @@
 export(fresc_scaling)
 export(fresc_trend)
 export(frescalo)
+export(predict_occ)
 importFrom(foreach,"%do%")
 importFrom(foreach,"%dopar%")
 importFrom(foreach,foreach)
