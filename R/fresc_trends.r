@@ -26,7 +26,7 @@
 #'   corrected neighbourhood frequencies to determine differences in frequency
 #'   between the time periods.
 #'
-#'#' @seealso [frescalo()] for a convenience wrapper function that applies both
+#' @seealso [frescalo()] for a convenience wrapper function that applies both
 #' stages of the frescalo analyses or [fresc_scaling()] for the function to determine
 #' rescaling factors and corrected frequencies required by `fresc_trends()`.
 #'
