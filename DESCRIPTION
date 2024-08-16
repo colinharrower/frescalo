@@ -1,6 +1,6 @@
 Package: frescalo
 Title: Correcting for variation in recording effort in bioloigical recording data using frescalo methodology
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Authors@R: 
     c(
     person("Colin", "Harrower", , "corr@ceh.ac.uk", role = c("aut", "cre"),
