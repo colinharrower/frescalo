@@ -14,12 +14,18 @@
 #'   of the map (e.g. a country boundary). The default `over_bd = NULL` assumes
 #'   no overlay.
 #' @param over_args A list of additional arguments that will be passed to the
-#'   `sf plot()` function used to add `over_bd` to the map (if `over_bd` is not `NULL`). The default
-#'   `over_args = NULL` assumes no additional arguments
-#' @param ... Additional arguments that will be passed to the `sf plot` function used to plot `fres_sf`.
+#'   `sf plot()` function used to add `over_bd` to the map (if `over_bd` is not
+#'   `NULL`). The default `over_args = NULL` assumes no additional arguments
+#' @param ... Additional arguments that will be passed to the `sf plot` function
+#'   used to plot `fres_sf`. For instance `breaks = "quantile"` can be used to
+#'   changes the breaks style to quantile based breaks.
 #'
 #' @return NULL
 #' @export
+#'
+#' @description This plotting fun
+#'
+#' @seealso [sf][plot.sf()]
 #'
 #' @examples
 fres_map = function(fres_sf,zcol = NULL, over_bd = NULL, over_args = NULL, ...){
