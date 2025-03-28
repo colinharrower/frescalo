@@ -161,7 +161,7 @@ fresc_trend = function(s_data, freq, all_spp = unique(s_data)) {
       StDev[i] = abs(xSD[i] - x[i])
     }
   }
-  df = data.frame(species=all_spp, time=timeBin, tFactor=x, StDev = StDev, estvar=estvar, sptot1=sptot1)
+  df = data.frame(species=all_spp, time=timeBin, tFactor=x, StDev = StDev)
   df = df[order(df$species, df$time),]
   # Reset row.names
   row.names(df) = NULL
