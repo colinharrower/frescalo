@@ -151,6 +151,13 @@ frescalo = function(
     # Cleanup
     rm(sSplit2)
 
+    # Reorder elements of trend_out (so that it is in species time order
+    trend_out$trend = trend_out$trend[order(trend_out$trend$species, trend_out$trend$time),]
+    trend_out$site_time = trend_out$site_time[order(trend_out$site_time$location, trend_out$site_time$time),]
+    # Reset rownames
+    row.names(trend_out$trend) = NULL
+    row.names(trend_out$site_time) = NULL
+
   # Create output object
     out_obj = c(freq_out,trend_out)
   # Return output
