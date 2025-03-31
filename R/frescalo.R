@@ -73,6 +73,15 @@ frescalo = function(
     filter_wts = FALSE
 ){
 
+  # Check occ_data contains required columns
+  if(!all(c("time","location","species") %in% names(occ_data))){
+      stop("occ_data does not meet required format (must contain columns: 'time','location','species')")
+  }
+  # Check neigh_wts contains required columns
+  if(!all(c("location1","location2","w") %in% names(neigh_wts))){
+    stop("neigh_wts does not meet required format (must contain columns: 'location1','location2','w')")
+  }
+
   # If in_parallel TRUE then check if parallel backend already registered with %dopar%
   if(in_parallel & !foreach::getDoParRegistered()){
     # If not then create a cluster
