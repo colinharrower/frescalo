@@ -137,3 +137,24 @@ head(out_fres[["site_time"]])
 
 ```
 
+```{r plot_tfactor}
+
+# Plot tFactor for a specific species
+  plot_tfactor(out_fres[["trend"]][which(out_fres[["trend"]]$species == "Species 1"),])
+
+```
+
+
+```{r plot_alpha}
+library(sf)
+# Merge location results from frescalo with spatial polygons for locations in example neighbourhoods (stored in d_locs)
+  sf_locs = merge(d_locs, out_fres[["locs"]], by = "location")
+# Plot alpha
+  fres_map(sf_locs,zcol="alpha")
+# Plot estimated species richness
+  fres_map(sf_locs,zcol="spnum_out")
+
+
+```
+
+

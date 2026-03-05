@@ -258,3 +258,32 @@ head(out_fres[["site_time"]])
     ## 4     TR16    1 0.5000000 1.000
     ## 5     TR15    1 0.0000000 0.005
     ## 6     TR14    1 0.0000000 0.005
+
+``` r
+# Plot tFactor for a specific species
+  plot_tfactor(out_fres[["trend"]][which(out_fres[["trend"]]$species == "Species 1"),])
+```
+
+![](README_files/figure-gfm/plot_tfactor-1.png)<!-- -->
+
+``` r
+library(sf)
+```
+
+    ## Linking to GEOS 3.13.1, GDAL 3.11.0, PROJ 9.6.0; sf_use_s2() is TRUE
+
+``` r
+# Merge location results from frescalo with spatial polygons for locations in example neighbourhoods (stored in d_locs)
+  sf_locs = merge(d_locs, out_fres[["locs"]], by = "location")
+# Plot alpha
+  fres_map(sf_locs,zcol="alpha")
+```
+
+![](README_files/figure-gfm/plot_alpha-1.png)<!-- -->
+
+``` r
+# Plot estimated species richness
+  fres_map(sf_locs,zcol="spnum_out")
+```
+
+![](README_files/figure-gfm/plot_alpha-2.png)<!-- -->
