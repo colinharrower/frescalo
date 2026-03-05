@@ -33,6 +33,10 @@ plot_tfactor = function(sp_trend, ylab = "Relative Frequency", xlab = "Time", yl
     ylim = range(c(sp_trend$tFactor-sp_trend$StDev,sp_trend$tFactor+sp_trend$StDev))
   }
   plot(sp_trend[,c("time","tFactor")],ylim = ylim, main = sp_trend$species[1], ylab = ylab, xlab = xlab, xaxt = "n",...)
-  axis(1, at = sort(unique(sp_trend$time)))
-  arrows(x0=sp_trend$time, x1=sp_trend$time, y0=sp_trend$tFactor-sp_trend$StDev, y1=sp_trend$tFactor+sp_trend$StDev, code = 3, angle = 90,length = 0.05,...)
+  axis(1, at = sort(unique(sp_trend$time)), labels = sort(unique(sp_trend$time)))
+  if(is.factor(sp_trend$time)){
+    arrows(x0=as.numeric(sp_trend$time), x1=as.numeric(sp_trend$time), y0=sp_trend$tFactor-sp_trend$StDev, y1=sp_trend$tFactor+sp_trend$StDev, code = 3, angle = 90,length = 0.05,...)
+  } else{
+    arrows(x0=sp_trend$time, x1=sp_trend$time, y0=sp_trend$tFactor-sp_trend$StDev, y1=sp_trend$tFactor+sp_trend$StDev, code = 3, angle = 90,length = 0.05,...)
+  }
 }
