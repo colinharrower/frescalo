@@ -1,0 +1,65 @@
+---
+title: "frescalo"
+author: "Colin Harrower"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The frescalo package contains an R implementation of Frescalo (FREquency SCAling LOcal) 
+modeling methodology invented by Dr Mark O. Hill to aid with analysis of biological record data. 
+The methodology attempts to correct for spatial and temporal variation in recorder effort that is 
+common in biological recording data (i.e. species occurrence data).
+
+
+## Installation
+
+You can install the development version of frescalo from [GitHub](https://github.com/colinharrower/frescalo) with:
+```{r install_pkg, eval = FALSE}
+# install.packages("pak")
+pak::pak("colinharrower/frescalo")
+```
+
+
+## Example
+
+The package contains simulated data which can be used as an example and or to test the package. The simulated data comrpises two data objects `s` containing occurrence data and `d` containing neighborhood weightings. The occurrence data in `s` has already been summarized to the format required by frescalo, specifically a `data.frame` containing all unique combinations of time period (`time`), sites or locations (`location`) and species ids or names (`species`). The neighbourhood weights data specifies for each focal location (`location1`) which other sites form its "neighbourhood" (`location2`) and the relevant weighting score between the focal site and each respective neighbourhood site (`w`).
+
+```{r view_input}
+# Load the package
+library(frescalo)
+
+# View the first 10 rows of the test dataset s (occurrence data)
+head(s,10)
+
+# View the first 10 rows of the weights datasets (d)
+head(d,10)
+```
+
+In this example dataset the species are identified using simplistic species IDs and the locations are identified using Ordnance Survey of Great Britain 10 km grid references, however the site and species identifiers can be any appropriate names or coded identifiers. The time periods can be identified as simple coded or numerical identifiers, as in the example data `d`, or using appropriate numerical values (e.g. mid-point of the time periods).
+
+
+The main wrapper function `frescalo()` is used to fit apply the frescalo model to the data, returning a list comprised of 4`data.frames` `locs` with the location metrics, `freq` with original and re-scaled species frequencies, `trend` with tFactors for each species, `site_time` with the site by time recording effort metrics used for the adjustments. The outputs are equivalent to the `samples.txt`, `frequencies.out` and `trend.out` output files produced by Mark Hill's original fortran frescalo program.
+
+```{r fit_fresc}
+# Use test dataset (s) and weights data (d) included with the package
+out_fres = frescalo(s,d,in_parallel = FALSE,filter_wts = TRUE)
+
+# View outputs
+## Location
+head(out_fres[["locs"]])
+
+## Frequency
+head(out_fres[["freq"]])
+
+## Trend
+head(out_fres[["trend"]])
+
+## Site Time
+head(out_fres[["site_time"]])
+```
+
+
