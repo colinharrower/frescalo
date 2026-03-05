@@ -1,13 +1,14 @@
 frescalo
 ================
-Colin Harrower
-2025-05-20
+Colin Harrower, Jonathan Yearsley and Oliver Pescott
+2026-03-05
 
 The frescalo package contains an R implementation of Frescalo (FREquency
-SCAling LOcal) modeling methodology invented by Dr Mark O. Hill to aid
-with analysis of biological record data. The methodology attempts to
-correct for spatial and temporal variation in recorder effort that is
-common in biological recording data (i.e. species occurrence data).
+SCAling LOcal) modeling methodology invented by Dr Mark O. Hill [(Hill,
+2011)](https://doi.org/10.1111/j.2041-210X.2011.00146.x) to aid with
+analysis of biological record data. The methodology attempts to correct
+for spatial and temporal variation in recorder effort that is common in
+biological recording data (i.e. species occurrence data).
 
 ## Installation
 
@@ -18,6 +19,62 @@ You can install the development version of frescalo from
 # install.packages("pak")
 pak::pak("colinharrower/frescalo")
 ```
+
+## Introduction
+
+Frescalo attempts to correct for spatial and temporal variation in
+recorder effort by analysing biological records data for a suite of
+species, often within a related taxonomic group, and making inference of
+the recording effort based on the relative recording frequencies of
+these species. Frescalo uses the recording frequency of sets of
+**benchmark species**, species believed to be relatively ubiquitous and
+stable in occurrence, to determine recording effort. Defining such
+**benchmark species** across a wide area would be difficult so instead
+frescalo uses sets of **benchmark species** that are unique to localised
+**neighbourhoods**. In frescalo a **neighourhood** represent a set of
+locations that are biologically or ecologically similar and or located
+in relative proximity to each other. In the simplest case neighbourhoods
+can be defined purely on proximity, however incorporating biologically
+or ecological similarity into the definition and weighting of
+neighbourhoods can typically improve the results.
+
+The recording effort for each of these neighbourhoods is determined by
+calculating the weighted local species frequencies for each species in
+that neighbourhood and then from these species frequencies calculating a
+neighborhood frequency. The local species frequencies for that
+neighbourhood are then systematically adjusted by a neighbourhood
+sampling-effort modifier to inflate or deflate the species frequency
+curves until the neightbourhood frequency achieves a specified standard
+value (Phi).
+
+## Data required
+
+### Species occurrence data
+
+Frescalo uses biological recording data where the original data has been
+summarised to unique combinations of time period, location and species.
+The choice of the spatial resolution for the locations and the time
+period chosen are up to the user but ideally these should chosen to
+allow an adequate level of recording at sites within the time periods.
+
+Frescalo was designed with biological atlas data in mind and as such has
+often been applied at typical atlas scales, i.e. 10km<sup>2</sup> square
+**sites** and multi-year atlas recording time periods (.e.g. 1980-1995,
+2000-2015). Frescalo has however been sucessfully applied at finer
+spatial and or temporal resolutions, i.e. 1km<sup>2</sup> or
+2km<sup>2</sup> sites and annual time periods.
+
+### Neighbourhood weights
+
+In addition to the species occurrence data Frescalo requires a dataset
+specifiying the sites that comprise each individual neighbourhood, and
+their relative weightings, for each site. Typically neighbourhoods are
+defined by first selecting the `k` closest sites and then from these
+selecting the `n` sites showing the greatest similarities to the focal
+site. The package includes a function, `calc_neight_wts()` to create a
+neighbourhood weights dataset from a `sf spatial polygons` or
+`spatial points`object containing attribute fields upon with the
+similarities are to be calculated.
 
 ## Example
 
@@ -91,8 +148,32 @@ frescalo program.
 # Use test dataset (s) and weights data (d) included with the package
 out_fres = frescalo(s,d,in_parallel = FALSE,filter_wts = TRUE)
 
-# View outputs
-## Location
+# Show the names of the elements in out_fres
+names(out_fres)
+```
+
+    ## [1] "locs"      "freq"      "trend"     "site_time"
+
+The location metrics from frescalo are found in the first `locs` element
+of the output list object and is a data.frame structured as follows:
+
+1.  **location** - The location ID/code
+2.  **nSpecies** - The number of species recorded
+3.  **phi_in** - The original neighbourhood frequency, or
+    frequency-weighted mean frequecy, for that locations neighbourhood
+4.  **alpha** - The sampling effort modifier required to standardise the
+    neighourhood frequency to Phi
+5.  **phi_out** - The value of neightbourhood frequecy after rescaling
+    (this should match the value of Phi specified as an target)
+6.  **spnum_in** - The sum of neighbourhood frequencies before rescaling
+7.  **spnum_out** - The sum of neighbourhood frequencies after scaling,
+    i.e. the estimated species richness
+8.  **iter** - The number of iterations for the algorithm to determine
+    the alpha value required for the neightbourhood frequency to reach
+    phi
+
+``` r
+# Show location outputs from the frescalo results object
 head(out_fres[["locs"]])
 ```
 
@@ -104,8 +185,26 @@ head(out_fres[["locs"]])
     ## 5     TR15        1 0.1855399 10.81524    0.74 2.970722  15.77083    7
     ## 6     TR14        2 0.1410191 14.16595    0.74 2.017961  13.92664    6
 
+The species frequencies metrics from frescalo are found in the
+\`freq\`\` element of the output object and is a data.frame structured
+as follows:
+
+1.  **location** - The location ID/code
+2.  **species** - The species ID/code/Name
+3.  **pres** - Whether the species was recording in that location (0 =
+    not recorded, 1 = recorded)
+4.  **freq** - The frequency of species in the neighbourhood
+5.  **freq_1** - The frequency of the species in the neighbourhood after
+    rescaling, i..e the estimated probability of occurrence
+6.  **rank** - The rank of that species frequency in the neighbourhood
+7.  **rank_1** - The rescaled rank, defined as the rank/estimated
+    species richness
+8.  **benchmark** - Specifying whether the species was considered a
+    benchmark species for the neighbourhood (1 = benchmark species, 0 =
+    non-benchmark species)
+
 ``` r
-## Frequency
+# Show the rescaled species frequecy outputs from the frescalo results object
 head(out_fres[["freq"]])
 ```
 
@@ -117,28 +216,45 @@ head(out_fres[["freq"]])
     ## 5     TR36  Species 8    0 0.10259340 0.8863268    5 0.30036266         0
     ## 6     TR36  Species 5    0 0.09602601 0.8683959    6 0.36043520         0
 
+The temporal tFactor metrics from frescalo are found in the \`trend\`\`
+element of the output object and is a data.frame structured as follows:
+
+1.  **species** - The species ID/code/Name
+2.  **time** - The ID/code/value specifying the time period
+3.  **tFactor** - The frescalo time factor, i.e. the estimated
+    relatively frequency of species at the time
+4.  **StDev** - The standard deviation of the time factor
+
 ``` r
-## Trend
+# Show tFactor trend outputs from the frescalo results object
 head(out_fres[["trend"]])
 ```
 
-    ##      species time   tFactor      StDev
-    ## 1  Species 1    1 0.6291580 0.05149657
-    ## 2  Species 1    2 0.4358530 0.04694728
-    ## 3 Species 10    1 0.2470118 0.04133537
-    ## 4 Species 10    2 0.2549233 0.04915949
-    ## 5 Species 11    1 0.3490210 0.14781598
-    ## 6 Species 11    2 0.2216005 0.13160626
+    ##      species time   tFactor      StDev    estvar     sptot1
+    ## 1  Species 1    1 0.6291580 0.05149657 91.374611 194.634007
+    ## 2 Species 10    1 0.2470118 0.04133537 31.131621  42.624572
+    ## 3 Species 11    1 0.3490210 0.14781598  5.097999   8.257875
+    ## 4 Species 12    1 0.2822276 0.14366985  3.727009   5.940546
+    ## 5 Species 13    1 0.5892903 0.04841457 91.667833 189.654332
+    ## 6 Species 14    1 0.1471866 0.03420740 17.117783  23.182364
+
+The site by time metrics from frescalo are found in the `site_time`
+element of the output object and is a data.frame structured as follows:
+
+1.  **location** - The location ID/code
+2.  **time** - The ID/code/value specifying the time period
+3.  **s_it** -
+4.  **w** -
 
 ``` r
-## Site Time
+# Show the site by time recording effort outputs from the frescalo results object
 head(out_fres[["site_time"]])
 ```
 
-    ##   location time s_it     w
-    ## 1     NC02    1    1 1.000
-    ## 2     NC02    2    0 0.005
-    ## 3     NC11    1    1 1.000
-    ## 4     NC11    2    0 0.005
-    ## 5     NC13    1    1 1.000
-    ## 6     NC13    2    0 0.005
+    ##   location time      s_it     w
+    ## 1     TR36    1 0.2500000 1.000
+    ## 2     TR34    1 0.0000000 0.005
+    ## 3     TR26    1 0.6666667 1.000
+    ## 4     TR16    1 0.5000000 1.000
+    ## 5     TR15    1 0.0000000 0.005
+    ## 6     TR14    1 0.0000000 0.005
