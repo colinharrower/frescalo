@@ -137,6 +137,8 @@ head(out_fres[["site_time"]])
 
 ```
 
+The package also includes a function to plot the tFactors for a given species when passed the relevant rows from the trend output data.frame for a given species
+
 ```{r plot_tfactor}
 
 # Plot tFactor for a specific species
@@ -144,15 +146,28 @@ head(out_fres[["site_time"]])
 
 ```
 
+Similarly the package includes a function to produce basic maps of the location information. Note that in the example below an outline of the Great Britain coastline has been loaded as a spatial object and is used to add a background boundary layer onto which the location polygons have been plotted
+
+```{r load_GB_outline, echo = FALSE, message = FALSE}
+  library(sf)
+# Get UK outline from BRCmap
+  temp = BRCmap::UK_lowres
+# Keep only Great Britain
+  temp = temp[which(temp$REGION == "Great Britain"),]
+  gb_outline = sf::st_geometry(temp)
+```
+
+
 
 ```{r plot_alpha}
-library(sf)
+# Load sf library to allow use of sf classes and functions
+  library(sf)
 # Merge location results from frescalo with spatial polygons for locations in example neighbourhoods (stored in d_locs)
   sf_locs = merge(d_locs, out_fres[["locs"]], by = "location")
 # Plot alpha
-  fres_map(sf_locs,zcol="alpha")
+  fres_map(sf_locs,zcol="alpha", over_bd = gb_outline)
 # Plot estimated species richness
-  fres_map(sf_locs,zcol="spnum_out")
+  fres_map(sf_locs,zcol="spnum_out", over_bd = gb_outline)
 
 
 ```
