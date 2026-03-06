@@ -287,10 +287,16 @@ data.frame for a single species.
 The package also includes a wrapper function to produce basic maps of
 the location information. This function requires that the outputs from
 frescalo that you want to plot have first been converted to a
-`sf points` or `sf polygons` object. Note that in the example below an
-outline of the Great Britain coastline has also been loaded into the
-session as an `sf` spatial object and is used to add a background layer
-for the maps onto which the location polygons have then been plotted.
+`sf points` or `sf polygons` object. In the example below this has been
+done by loading d_loc, which is an `sf` spatial object providing the
+geometry for the 10km squares used in the test data, into the session
+and merging this with the location results from frescalo to assign these
+geometries to frescalo results. Loading and working with `sf` spatial
+objects requires that the `sf` package library is loaded to the session.
+In the example below an outline of the Great Britain coastline has also
+been loaded into the session as an `sf` spatial object and is used to
+add a background reference layer for the maps onto which the location
+polygons have then been plotted.
 
 ``` r
 # Load sf library to allow use of sf classes and functions
