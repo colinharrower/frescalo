@@ -26,26 +26,27 @@ pak::pak("colinharrower/frescalo")
 
 ## Introduction
 
-Frescalo attempts to correct for spatial and temporal variation in recorder effort by analysing biological records data for a suite of species, often within a related  taxonomic group, and making inference of the recording effort based on the relative recording frequencies of these species. Frescalo uses the recording frequency of sets of **benchmark species**, species believed to be relatively ubiquitous and stable in occurrence, to determine recording effort. Defining such **benchmark species** across a wide area would be difficult so instead frescalo uses sets of **benchmark species** that are unique to localised **neighbourhoods**. 
-In frescalo a **neighourhood** represent a set of locations that are biologically or ecologically similar and or located in relative proximity to each other. In the simplest case neighbourhoods can be defined purely on proximity, however incorporating biologically or ecological similarity into the definition and weighting of neighbourhoods can typically improve the results. 
+Frescalo attempts to correct for spatial and temporal variation in recorder effort by analysing biological records data across a suite of species, often within a related  taxonomic group. Frescalo uses the recording frequency of sets of **benchmark species**, species believed to be relatively ubiquitous and stable in occurrence, to determine and adjust for the recording effort across space and time. Defining such **benchmark species** across a wide area would be difficult so instead frescalo uses sets of **benchmark species** that are unique to localised **neighbourhoods**.
 
-The recording effort for each of these neighbourhoods is determined by calculating the weighted local species frequencies for each species in that neighbourhood and then from these species frequencies calculating a neighborhood frequency. The local species frequencies for that neighbourhood are then systematically adjusted by a neighbourhood sampling-effort modifier to inflate or deflate the species frequency curves until the neightbourhood frequency achieves a specified standard value (Phi).
+In frescalo a **neighourhood** represents a set of locations that are located in relative proximity to each other and in many cases also that are biologically or ecologically similar. In the simplest case neighbourhoods can be defined that are based purely on proximity, however incorporating similarity in biological or ecological important parameters into the selection and weighting of neighbourhoods can improve the results. 
+
+The recording effort for each of these neighbourhoods is determined by calculating the weighted local species frequencies for each species in that neighbourhood and then from these species frequencies calculating a neighborhood frequency. The local species frequencies for that neighbourhood are then systematically adjusted by a neighbourhood sampling-effort modifier (alpha) to inflate or deflate the species frequency curves until the neighbourhood frequency achieves a defined standard value (Phi).
 
 ## Data required
 
 ### Species occurrence data
-Frescalo uses biological recording data where the original data has been summarised to unique combinations of time period, location and species. The choice of the spatial resolution for the locations and the time period chosen are up to the user but ideally these should chosen to allow an adequate level of recording at sites within the time periods.
+Frescalo uses biological recording data where the original data has been summarised to unique combinations of time period, location and species. The choice of  spatial resolution for the locations and the length and coverage of the time period used are selected by the user and will be based on the aims of the analysis and with consideration of the underlying occurrence data.  Ideally the spatial and temporal resolutions used in the analysis should allow an adequate level of species recording, particularly of potential benchmark species, within the time periods across a significant proportion of the locations.
 
-Frescalo was designed with biological atlas data in mind and as such has often been applied at typical atlas scales, i.e. 10km^2^ square **sites** and multi-year atlas recording time periods (.e.g. 1980-1995, 2000-2015). Frescalo has however been sucessfully applied at finer spatial and or temporal resolutions, i.e. 1km^2^ or 2km^2^ sites and annual time periods.
+Frescalo was designed with biological atlas data in mind and as such has often been applied at scales typical to the atlases, i.e. 10km^2^ square **locations** and multi-year atlas recording time periods (.e.g. 1980-1995, 2000-2015). Frescalo has however been sucessfully applied at finer spatial and or temporal resolutions, such as 1km^2^ or annual time periods. or even at broader scales (e.g. administrative areas).
 
 ### Neighbourhood weights
 
-In addition to the species occurrence data Frescalo requires a dataset specifiying the sites that comprise each individual neighbourhood, and their relative weightings, for each site. Typically neighbourhoods are defined by first selecting the `k` closest sites and then from these selecting the `n` sites showing the greatest similarities to the focal site. The package includes a function, `calc_neight_wts()` to create a neighbourhood weights dataset from a `sf spatial polygons` or `spatial points`object containing attribute fields upon with the similarities are to be calculated.
+In addition to the species occurrence data Frescalo requires a dataset that specifies the neighbourhoods. This dataset lists the locations that comprise each individual neighbourhood alongside weighting values showing the relative weightings of each location in the neighbourhood to the focal location. The package includes a function, `calc_neight_wts()` to create a neighbourhood weights dataset from a `sf spatial polygons` or `spatial points`object containing attribute fields upon with the similarities are to be calculated. In this function neighbourhoods are defined by first selecting the `k` closest locations to the focal location and then from these selecting the `n` locations showing the greatest similarities to the focal location, where `k` > `n`. 
 
 
 ## Example
 
-The package contains simulated data which can be used as an example and or to test the package. The simulated data comrpises two data objects `s` containing occurrence data and `d` containing neighborhood weightings. The occurrence data in `s` has already been summarized to the format required by frescalo, specifically a `data.frame` containing all unique combinations of time period (`time`), sites or locations (`location`) and species ids or names (`species`). The neighbourhood weights data specifies for each focal location (`location1`) which other sites form its "neighbourhood" (`location2`) and the relevant weighting score between the focal site and each respective neighbourhood site (`w`).
+The package contains simulated data which can be used as an example or to test the package. The simulated data comprises two data objects `s` containing the  occurrence data and `d` containing the neighborhood weightings. The simulated occurrence data in `s` has already been summarised to the format required by frescalo, specifically a `data.frame` containing all unique combinations of time period (`time`), sites or locations (`location`) and species ids or names (`species`). The neighbourhood weights data specifies for each focal location (`location1`) which other sites form its **neighbourhood** (`location2`) and the relevant weighting score between the focal site and each respective neighbourhood site (`w`).
 
 ```{r view_input}
 # Load the package
@@ -58,7 +59,7 @@ head(s,10)
 head(d,10)
 ```
 
-In this example dataset the species are identified using simplistic species IDs and the locations are identified using Ordnance Survey of Great Britain 10 km grid references, however the site and species identifiers can be any appropriate names or coded identifiers. The time periods can be identified as simple coded or numerical identifiers, as in the example data `d`, or using appropriate numerical values (e.g. mid-point of the time periods).
+In this example dataset species are identified using numerical species IDs and the locations are identified using Ordnance Survey of Great Britain 10 km grid references, however the site and species identifiers can be any appropriate names or coded/numerical identifiers. Similarly the time periods can be identified as simple coded or numerical identifiers, as in the example data `d`, or using appropriate numerical values (e.g. mid-point of the time periods).
 
 
 The main wrapper function `frescalo()` is used to fit apply the frescalo model to the data, returning a list comprised of 4`data.frames` `locs` with the location metrics, `freq` with original and re-scaled species frequencies, `trend` with tFactors for each species, `site_time` with the site by time recording effort metrics used for the adjustments. The outputs are equivalent to the `samples.txt`, `frequencies.out` and `trend.out` output files produced by Mark Hill's original fortran frescalo program.
@@ -137,7 +138,12 @@ head(out_fres[["site_time"]])
 
 ```
 
-The package also includes a function to plot the tFactors for a given species when passed the relevant rows from the trend output data.frame for a given species
+
+### Plotting outputs
+
+The package also includes a few functions to help produce plots & figures of the results.
+
+The first of these is a function to plot the tFactors for a given species. This function takes the relevant rows from the trend output data.frame for a single species.
 
 ```{r plot_tfactor}
 
@@ -146,7 +152,7 @@ The package also includes a function to plot the tFactors for a given species wh
 
 ```
 
-Similarly the package includes a function to produce basic maps of the location information. Note that in the example below an outline of the Great Britain coastline has been loaded as a spatial object and is used to add a background boundary layer onto which the location polygons have been plotted
+The package also includes a wrapper function to produce basic maps of the location information. This function requires that the outputs from frescalo that you want to plot have first been converted to a `sf points` or `sf polygons` object. Note that in the example below an outline of the Great Britain coastline has also been loaded into the session as an `sf` spatial object and is used to add a background layer for the maps onto which the location polygons have then been plotted.
 
 ```{r load_GB_outline, echo = FALSE, message = FALSE}
   library(sf)
