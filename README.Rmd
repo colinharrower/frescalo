@@ -32,6 +32,8 @@ In frescalo a **neighourhood** represents a set of locations that are located in
 
 The recording effort for each of these neighbourhoods is determined by calculating the weighted local species frequencies for each species in that neighbourhood and then from these species frequencies calculating a neighborhood frequency. The local species frequencies for that neighbourhood are then systematically adjusted by a neighbourhood sampling-effort modifier (alpha) to inflate or deflate the species frequency curves until the neighbourhood frequency achieves a defined standard value (Phi).
 
+For more information on the frescalo methodology, and how it can be used to analyse unstructured citizen science data, see the paper by [Gourey *et al.*, 2026](https://doi.org/10.1002/ecog.08270) that also introduced this R package.
+
 ## Data required
 
 ### Species occurrence data

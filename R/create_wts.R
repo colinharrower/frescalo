@@ -252,7 +252,7 @@ calc_neigh_wts = function(
   # using foreach in parallel or sequentially to create neighbourhood weightings for each chunk
   if(in_parallel){
     wts_out = foreach(i = 1:n_chunk, .inorder=T, .combine='rbind', .multicombine=TRUE) %dopar% {
-      devtools::load_all() # lines need for local testing remove for installed package
+      #devtools::load_all() # lines need for local testing remove for installed package
       batch_neigh_wts(foc_inds = cnk_locs[[i]], comp_param = comp_param, k = k, n = n)
     }
   } else {
