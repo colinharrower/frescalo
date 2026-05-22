@@ -1,7 +1,7 @@
 frescalo
 ================
 Colin Harrower, Jonathan Yearsley and Oliver Pescott
-2026-03-06
+2026-05-22
 
 The frescalo package contains an R implementation of Frescalo (FREquency
 SCAling LOcal) modeling methodology invented by Dr Mark O. Hill [(Hill,
@@ -48,6 +48,11 @@ neighbourhood are then systematically adjusted by a neighbourhood
 sampling-effort modifier (alpha) to inflate or deflate the species
 frequency curves until the neighbourhood frequency achieves a defined
 standard value (Phi).
+
+For more information on the frescalo methodology, and how it can be used
+to analyse unstructured citizen science data, see the paper by [Gourey
+*et al.*, 2026](https://doi.org/10.1002/ecog.08270) that also introduced
+this R package.
 
 ## Data required
 
@@ -239,13 +244,13 @@ element of the output object and is a data.frame structured as follows:
 head(out_fres[["trend"]])
 ```
 
-    ##      species time   tFactor      StDev    estvar     sptot1
-    ## 1  Species 1    1 0.6291580 0.05149657 91.374611 194.634007
-    ## 2 Species 10    1 0.2470118 0.04133537 31.131621  42.624572
-    ## 3 Species 11    1 0.3490210 0.14781598  5.097999   8.257875
-    ## 4 Species 12    1 0.2822276 0.14366985  3.727009   5.940546
-    ## 5 Species 13    1 0.5892903 0.04841457 91.667833 189.654332
-    ## 6 Species 14    1 0.1471866 0.03420740 17.117783  23.182364
+    ##      species time   tFactor      StDev
+    ## 1  Species 1    1 0.6291580 0.05149657
+    ## 2  Species 1    2 0.4358530 0.04694728
+    ## 3 Species 10    1 0.2470118 0.04133537
+    ## 4 Species 10    2 0.2549233 0.04915949
+    ## 5 Species 11    1 0.3490210 0.14781598
+    ## 6 Species 11    2 0.2216005 0.13160626
 
 The site by time metrics from frescalo are found in the `site_time`
 element of the output object and is a data.frame structured as follows:
@@ -260,13 +265,13 @@ element of the output object and is a data.frame structured as follows:
 head(out_fres[["site_time"]])
 ```
 
-    ##   location time      s_it     w
-    ## 1     TR36    1 0.2500000 1.000
-    ## 2     TR34    1 0.0000000 0.005
-    ## 3     TR26    1 0.6666667 1.000
-    ## 4     TR16    1 0.5000000 1.000
-    ## 5     TR15    1 0.0000000 0.005
-    ## 6     TR14    1 0.0000000 0.005
+    ##   location time s_it     w
+    ## 1     NC02    1    1 1.000
+    ## 2     NC02    2    0 0.005
+    ## 3     NC11    1    1 1.000
+    ## 4     NC11    2    0 0.005
+    ## 5     NC13    1    1 1.000
+    ## 6     NC13    2    0 0.005
 
 ### Plotting outputs
 
