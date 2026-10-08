@@ -23,15 +23,19 @@
 #'
 predict_occ <- function(freq, trend){
   list_data <- by(
-    data = freq, freq[,c("location","species")],
+    data = freq, freq$species,
     function(x,trend){
-      cur_t = trend[trend$species==x$species,]
-      cur_p = (1-(1-x$freq_1)^cur_t$tFactor)
-      ret_obj = data.frame(species = x$species, location = x$location, time = cur_t$time, p_occ = cur_p)
+      cur_t = trend[trend$species==x$species[1],]
+      n_t = nrow(cur_t)
+      n_loc = nrow(x)
+      cur_p = (1-(1-rep(x$freq_1,each = n_t))^rep(cur_t$tFactor,n_loc))
+      ret_obj = data.frame(species = x$species, location = rep(x$location,each=n_t), time = rep(cur_t$time,n_loc), p_occ = cur_p)
       return(ret_obj)
     }, trend = trend, simplify = FALSE)
   # Collapse list
-    df = do.call("rbind",list_data)
+  # set names for list_data to NULL to avoid row.names being created
+  names(list_data) = NULL
+  df = do.call("rbind",list_data)
   # Now return
   return(df)
 }
